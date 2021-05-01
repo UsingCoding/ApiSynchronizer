@@ -6,7 +6,7 @@ all: build test
 
 .PHONY: build
 build: modules
-	bin/go-build.sh "cmd" "bin/$(APP_CMD_NAME)" $(APP_CMD_NAME)
+	bin/go-build.sh "cmd" "bin/$(APP_CMD_NAME)" $(APP_CMD_NAME) .env
 
 .PHONY: modules
 modules:

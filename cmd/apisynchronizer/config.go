@@ -6,9 +6,13 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var (
+	apiRepoUrl = "UNKNOWN"
+)
+
 func parseConfig() (*config, error) {
 	c := &config{
-		ApisRepoUrl:   "git@github.com:UsingCoding/TempRepoForTestApiSynchronization.git",
+		ApisRepoUrl:   apiRepoUrl,
 		RepoCachePath: "/tmp/apisynchronizer/cache",
 		ApisFolder:    "api",
 	}
