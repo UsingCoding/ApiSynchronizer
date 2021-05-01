@@ -1,9 +1,12 @@
 package main
 
 import (
+	"apisynchronizer/pkg/apisynchronizer/infrastructure"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	stdlog "log"
 	"os"
+	"time"
 )
 
 var (
@@ -43,4 +46,14 @@ func runApp(args []string) error {
 	}
 
 	return app.Run(args)
+}
+
+func initReporter() infrastructure.Reporter {
+	impl := logrus.New()
+	impl.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat:  time.RFC3339Nano,
+		DisableTimestamp: true,
+	})
+
+	return impl
 }

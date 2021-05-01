@@ -3,11 +3,12 @@ package main
 import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
+	"github.com/urfave/cli/v2"
 )
 
 func parseConfig() (*config, error) {
 	c := &config{
-		ApisRepoUrl:   "git@github.com:CuriosityMusicStreaming/ApiGateway.git",
+		ApisRepoUrl:   "git@github.com:UsingCoding/TempRepoForTestApiSynchronization.git",
 		RepoCachePath: "/tmp/apisynchronizer/cache",
 	}
 	if err := envconfig.Process(appID, c); err != nil {
@@ -16,7 +17,21 @@ func parseConfig() (*config, error) {
 	return c, nil
 }
 
+func parseRuntimeConfig(ctx *cli.Context) (*runtimeConfig, error) {
+	c := new(runtimeConfig)
+
+	c.outputPath = ctx.String("output")
+	c.configPath = ctx.String("file")
+
+	return c, nil
+}
+
 type config struct {
 	ApisRepoUrl   string `envconfig:"apis_repo_url"`
 	RepoCachePath string `envconfig:"repo_cache_path"`
+}
+
+type runtimeConfig struct {
+	outputPath string
+	configPath string
 }

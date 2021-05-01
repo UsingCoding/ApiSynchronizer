@@ -1,8 +1,10 @@
 package reporesolver
 
 import (
-	git2 "apisynchronizer/pkg/common/infrastructure/git"
+	embedder "apisynchronizer/data/apisynchronizer"
+	"apisynchronizer/pkg/common/infrastructure/git"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"os"
 	"path"
 )
@@ -20,7 +22,7 @@ type Resolver interface {
 	Path() (string, error)
 }
 
-func New(apisRepoUrl, apisRepoCachePath string, gitExecutor git2.Executor) Resolver {
+func New(apisRepoUrl, apisRepoCachePath string, gitExecutor git.Executor) Resolver {
 	return &repoResolver{
 		apisRepoUrl:       apisRepoUrl,
 		apisRepoCachePath: apisRepoCachePath,
@@ -31,7 +33,7 @@ func New(apisRepoUrl, apisRepoCachePath string, gitExecutor git2.Executor) Resol
 type repoResolver struct {
 	apisRepoUrl       string
 	apisRepoCachePath string
-	gitExecutor       git2.Executor
+	gitExecutor       git.Executor
 	repoResolved      bool
 }
 
@@ -59,6 +61,11 @@ func (resolver *repoResolver) resolveRepo() error {
 		err2 = resolver.gitExecutor.RunWithWorkDir(resolver.apisRepoCachePath, "clone", resolver.apisRepoUrl, cacheRepoName)
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to clone repo")
+		}
+
+		err2 = ioutil.WriteFile(path.Join(resolver.apisRepoCachePath, cacheRepoName, embedder.WarningReadMeName), embedder.WarningReadMe, 0755)
+		if err2 != nil {
+			return err2
 		}
 	}
 
