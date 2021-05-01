@@ -1,6 +1,6 @@
 export APP_CMD_NAME = apisynchronizer
-export REGISTRY = vadimmakerov/music-streaming
-export DOCKER_IMAGE_NAME = $(REGISTRY)-$(APP_CMD_NAME):master
+export REGISTRY = vadimmakerov
+export DOCKER_IMAGE_NAME = $(REGISTRY)/$(APP_CMD_NAME):master
 
 all: build test
 
