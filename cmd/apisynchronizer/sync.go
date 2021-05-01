@@ -50,7 +50,10 @@ func executeResolve(ctx *cli.Context) error {
 
 	apiSynchronizer := initSynchronizer(apisRepoPath, config.ApisFolder, runtimeConfig.outputPath, repoManager, infoReporter)
 
-	return apiSynchronizer.Synchronize(synchronizer.SynchronizeParams{ApiDeclaration: apiDeclarations})
+	return apiSynchronizer.Synchronize(synchronizer.SynchronizeParams{
+		ApiDeclaration: apiDeclarations,
+		ForceRemote:    runtimeConfig.forceRemote,
+	})
 }
 
 func initSynchronizer(

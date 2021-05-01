@@ -48,6 +48,10 @@ func runApp(args []string) error {
 						Name:    "quiet",
 						Aliases: []string{"q"},
 					},
+					&cli.BoolFlag{
+						Name:  "remote",
+						Usage: "Forces use remote changes",
+					},
 				},
 			},
 		},

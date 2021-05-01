@@ -15,9 +15,12 @@ func NewRepoManager(repoPath string, gitExecutor Executor) RepoManager {
 
 type RepoManager interface {
 	Checkout(branch string) error
+	ForceCheckout(branch string) error
 	Fetch() error
 	FetchAll() error
 	RemoteBranches() ([]string, error)
+	// ListChangedFiles returns slice of changed files
+	ListChangedFiles() ([]string, error)
 }
 
 type repoManager struct {
@@ -27,6 +30,10 @@ type repoManager struct {
 
 func (repo *repoManager) Checkout(branch string) error {
 	return repo.run("checkout", branch)
+}
+
+func (repo *repoManager) ForceCheckout(branch string) error {
+	return repo.run("checkout", "-f", branch)
 }
 
 func (repo *repoManager) Fetch() error {
@@ -57,6 +64,26 @@ func (repo *repoManager) RemoteBranches() ([]string, error) {
 		branches = append(branches, strings.TrimSpace(reg.FindString(s)))
 	}
 	return branches, nil
+}
+
+func (repo *repoManager) ListChangedFiles() ([]string, error) {
+	output, err := repo.output("status", "-s")
+	if err != nil {
+		return nil, err
+	}
+
+	const modifiedPrefix = "M"
+
+	var result []string
+
+	for _, line := range strings.Split(string(output), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, modifiedPrefix) {
+			result = append(result, line)
+		}
+	}
+
+	return result, nil
 }
 
 func (repo *repoManager) run(args ...string) error {

@@ -37,6 +37,7 @@ type Synchronizer struct {
 
 type SynchronizeParams struct {
 	ApiDeclaration map[Service]Revision
+	ForceRemote    bool
 }
 
 func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
@@ -45,7 +46,19 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 		return err
 	}
 
-	s.reporter.Info("Fetching repo ⏳...")
+	changedFiles, err := s.repoManager.ListChangedFiles()
+	if err != nil {
+		return err
+	}
+
+	useRemote := false
+
+	if params.ForceRemote || len(changedFiles) == 0 {
+		useRemote = true
+		s.reporter.Info("Fetching repo ⏳...")
+	} else {
+		s.reporter.Info("Using local changes...")
+	}
 
 	err = s.repoManager.FetchAll()
 	if err != nil {
@@ -58,9 +71,11 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 	}{}
 
 	for service, revision := range params.ApiDeclaration {
-		err2 := s.repoManager.Checkout(fmt.Sprintf("%s/%s", remoteBranch, revision))
-		if err2 != nil {
-			return err2
+		if useRemote {
+			err2 := s.repoManager.ForceCheckout(fmt.Sprintf("%s/%s", remoteBranch, revision))
+			if err2 != nil {
+				return err2
+			}
 		}
 
 		apiFileInApiRepo, err2 := s.pathBuilder.FindApiForService(service)
@@ -68,15 +83,15 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 			return err2
 		}
 
-		input, err := ioutil.ReadFile(apiFileInApiRepo)
-		if err != nil {
+		bytes, err2 := ioutil.ReadFile(apiFileInApiRepo)
+		if err2 != nil {
 			return err
 		}
 
 		serviceApiFile[service] = struct {
 			fileName string
 			file     []byte
-		}{fileName: path.Base(apiFileInApiRepo), file: input}
+		}{fileName: path.Base(apiFileInApiRepo), file: bytes}
 
 		s.reporter.Info(fmt.Sprintf("Api file for %s resolved", service))
 	}

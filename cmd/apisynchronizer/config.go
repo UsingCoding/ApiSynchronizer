@@ -27,6 +27,7 @@ func parseRuntimeConfig(ctx *cli.Context) (*runtimeConfig, error) {
 
 	c.outputPath = ctx.String("output")
 	c.configPath = ctx.String("file")
+	c.forceRemote = ctx.Bool("remote")
 
 	return c, nil
 }
@@ -38,6 +39,7 @@ type config struct {
 }
 
 type runtimeConfig struct {
-	outputPath string
-	configPath string
+	outputPath  string
+	configPath  string
+	forceRemote bool
 }
