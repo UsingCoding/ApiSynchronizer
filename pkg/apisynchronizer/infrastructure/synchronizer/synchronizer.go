@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"
-	"os"
 	"path"
 )
 
@@ -17,7 +16,7 @@ type (
 
 func New(
 	repoManager git.RepoManager,
-	pathBuilder ApiFilePathBuilder,
+	pathBuilder ApiFileFinder,
 	structureBuilder OutputStructureBuilder,
 	reporter infrastructure.Reporter,
 ) *Synchronizer {
@@ -31,7 +30,7 @@ func New(
 
 type Synchronizer struct {
 	repoManager      git.RepoManager
-	pathBuilder      ApiFilePathBuilder
+	pathBuilder      ApiFileFinder
 	structureBuilder OutputStructureBuilder
 	reporter         infrastructure.Reporter
 }
@@ -46,12 +45,12 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 		return err
 	}
 
+	s.reporter.Info("Fetching repo ⏳...")
+
 	err = s.repoManager.FetchAll()
 	if err != nil {
 		return err
 	}
-
-	s.reporter.Info("Fetching repo ⏳...")
 
 	serviceApiFile := map[Service]struct {
 		fileName string
@@ -64,9 +63,9 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 			return err2
 		}
 
-		apiFileInApiRepo := s.pathBuilder.BuildForApiRepo(service)
-		if err2 = fileExists(apiFileInApiRepo); err2 != nil {
-			return errors.Wrap(err2, fmt.Sprintf("service api file for %s doesnt exists in api repo", service))
+		apiFileInApiRepo, err2 := s.pathBuilder.FindApiForService(service)
+		if err2 != nil {
+			return err2
 		}
 
 		input, err := ioutil.ReadFile(apiFileInApiRepo)
@@ -116,9 +115,4 @@ func (s *Synchronizer) fetchRemoteBranch() (string, error) {
 	}
 
 	return branches[0], nil
-}
-
-func fileExists(path string) error {
-	_, err := os.Stat(path)
-	return err
 }

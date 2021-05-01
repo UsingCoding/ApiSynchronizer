@@ -1,25 +1,45 @@
 package synchronizer
 
 import (
+	"fmt"
+	"github.com/pkg/errors"
+	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
-func NewApiFilePathBuilder(apisRepoPath string) ApiFilePathBuilder {
-	return &filePathBuilder{apisRepoPath: apisRepoPath}
+func NewApiFileFinder(apisRepoPath string, apisFolder string) ApiFileFinder {
+	return &apiFileFinder{
+		apisRepoPath: apisRepoPath,
+		apisFolder:   apisFolder,
+	}
 }
 
-type ApiFilePathBuilder interface {
-	BuildForApiRepo(service Service) string
+type ApiFileFinder interface {
+	FindApiForService(service Service) (string, error)
 }
 
-type filePathBuilder struct {
+type apiFileFinder struct {
 	apisRepoPath string
+	apisFolder   string
 }
 
-func (builder *filePathBuilder) BuildForApiRepo(service Service) string {
-	const apiFileExtension = ".proto"
-	return path.Join(builder.apisRepoPath, string(service), string(service)+apiFileExtension)
+func (finder *apiFileFinder) FindApiForService(service Service) (string, error) {
+	apisFolderPath := path.Join(finder.apisRepoPath, finder.apisFolder)
+	entries, err := ioutil.ReadDir(apisFolderPath)
+	if err != nil {
+		return "", errors.Wrap(err, "no apis folder found in repo")
+	}
+
+	for _, entry := range entries {
+		fileNameWithoutExt := strings.Trim(entry.Name(), path.Ext(entry.Name()))
+		if fileNameWithoutExt == string(service) {
+			return path.Join(apisFolderPath, entry.Name()), nil
+		}
+	}
+
+	return "", errors.New(fmt.Sprintf("api file for service %s not found", service))
 }
 
 func NewOutputStructureBuilder(outputPath string) OutputStructureBuilder {

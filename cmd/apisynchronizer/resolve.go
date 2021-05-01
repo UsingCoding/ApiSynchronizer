@@ -48,20 +48,21 @@ func executeResolve(ctx *cli.Context) error {
 
 	repoManager := git.NewRepoManager(apisRepoPath, gitExecutor)
 
-	apiSynchronizer := initSynchronizer(apisRepoPath, runtimeConfig.outputPath, repoManager, reporter)
+	apiSynchronizer := initSynchronizer(apisRepoPath, config.ApisFolder, runtimeConfig.outputPath, repoManager, reporter)
 
 	return apiSynchronizer.Synchronize(synchronizer.SynchronizeParams{ApiDeclaration: apiDeclarations})
 }
 
 func initSynchronizer(
 	apisRepoPath,
+	apisFolder,
 	outputPath string,
 	manager git.RepoManager,
 	reporter infrastructure.Reporter,
 ) *synchronizer.Synchronizer {
 	return synchronizer.New(
 		manager,
-		synchronizer.NewApiFilePathBuilder(apisRepoPath),
+		synchronizer.NewApiFileFinder(apisRepoPath, apisFolder),
 		synchronizer.NewOutputStructureBuilder(outputPath),
 		reporter,
 	)

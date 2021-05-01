@@ -10,6 +10,7 @@ func parseConfig() (*config, error) {
 	c := &config{
 		ApisRepoUrl:   "git@github.com:UsingCoding/TempRepoForTestApiSynchronization.git",
 		RepoCachePath: "/tmp/apisynchronizer/cache",
+		ApisFolder:    "api",
 	}
 	if err := envconfig.Process(appID, c); err != nil {
 		return nil, errors.Wrap(err, "failed to parse env")
@@ -29,6 +30,7 @@ func parseRuntimeConfig(ctx *cli.Context) (*runtimeConfig, error) {
 type config struct {
 	ApisRepoUrl   string `envconfig:"apis_repo_url"`
 	RepoCachePath string `envconfig:"repo_cache_path"`
+	ApisFolder    string `envconfig:"apis_folder"`
 }
 
 type runtimeConfig struct {
