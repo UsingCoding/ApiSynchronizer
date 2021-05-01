@@ -2,8 +2,8 @@ package reporesolver
 
 import (
 	embedder "apisynchronizer/data/apisynchronizer"
-	"apisynchronizer/pkg/apisynchronizer/infrastructure"
 	"apisynchronizer/pkg/common/infrastructure/git"
+	"apisynchronizer/pkg/common/infrastructure/reporter"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
@@ -27,7 +27,7 @@ func New(
 	apisRepoUrl,
 	apisRepoCachePath string,
 	gitExecutor git.Executor,
-	reporter infrastructure.Reporter,
+	reporter reporter.Reporter,
 ) Resolver {
 	return &repoResolver{
 		apisRepoUrl:       apisRepoUrl,
@@ -41,7 +41,7 @@ type repoResolver struct {
 	apisRepoUrl       string
 	apisRepoCachePath string
 	gitExecutor       git.Executor
-	reporter          infrastructure.Reporter
+	reporter          reporter.Reporter
 	repoResolved      bool
 }
 

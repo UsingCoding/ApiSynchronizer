@@ -1,10 +1,10 @@
 package main
 
 import (
-	"apisynchronizer/pkg/apisynchronizer/infrastructure"
 	"apisynchronizer/pkg/apisynchronizer/infrastructure/reporesolver"
 	"apisynchronizer/pkg/apisynchronizer/infrastructure/synchronizer"
 	"apisynchronizer/pkg/common/infrastructure/git"
+	"apisynchronizer/pkg/common/infrastructure/reporter"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
@@ -32,13 +32,13 @@ func executeResolve(ctx *cli.Context) error {
 		return err
 	}
 
-	reporter := initReporter()
+	infoReporter := initReporter(ctx)
 
 	repoResolver := reporesolver.New(
 		config.ApisRepoUrl,
 		config.RepoCachePath,
 		gitExecutor,
-		reporter,
+		infoReporter,
 	)
 
 	apisRepoPath, err := repoResolver.Path()
@@ -48,7 +48,7 @@ func executeResolve(ctx *cli.Context) error {
 
 	repoManager := git.NewRepoManager(apisRepoPath, gitExecutor)
 
-	apiSynchronizer := initSynchronizer(apisRepoPath, config.ApisFolder, runtimeConfig.outputPath, repoManager, reporter)
+	apiSynchronizer := initSynchronizer(apisRepoPath, config.ApisFolder, runtimeConfig.outputPath, repoManager, infoReporter)
 
 	return apiSynchronizer.Synchronize(synchronizer.SynchronizeParams{ApiDeclaration: apiDeclarations})
 }
@@ -58,7 +58,7 @@ func initSynchronizer(
 	apisFolder,
 	outputPath string,
 	manager git.RepoManager,
-	reporter infrastructure.Reporter,
+	reporter reporter.Reporter,
 ) *synchronizer.Synchronizer {
 	return synchronizer.New(
 		manager,

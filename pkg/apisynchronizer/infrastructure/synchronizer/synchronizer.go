@@ -1,8 +1,8 @@
 package synchronizer
 
 import (
-	"apisynchronizer/pkg/apisynchronizer/infrastructure"
 	"apisynchronizer/pkg/common/infrastructure/git"
+	"apisynchronizer/pkg/common/infrastructure/reporter"
 	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -18,7 +18,7 @@ func New(
 	repoManager git.RepoManager,
 	pathBuilder ApiFileFinder,
 	structureBuilder OutputStructureBuilder,
-	reporter infrastructure.Reporter,
+	reporter reporter.Reporter,
 ) *Synchronizer {
 	return &Synchronizer{
 		repoManager:      repoManager,
@@ -32,7 +32,7 @@ type Synchronizer struct {
 	repoManager      git.RepoManager
 	pathBuilder      ApiFileFinder
 	structureBuilder OutputStructureBuilder
-	reporter         infrastructure.Reporter
+	reporter         reporter.Reporter
 }
 
 type SynchronizeParams struct {

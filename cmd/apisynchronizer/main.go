@@ -1,7 +1,7 @@
 package main
 
 import (
-	"apisynchronizer/pkg/apisynchronizer/infrastructure"
+	"apisynchronizer/pkg/common/infrastructure/reporter"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	stdlog "log"
@@ -23,12 +23,14 @@ func main() {
 
 func runApp(args []string) error {
 	app := &cli.App{
-		Name:    appID,
-		Version: version,
+		Name:                 appID,
+		Version:              version,
+		EnableBashCompletion: true,
 		Commands: []*cli.Command{
 			{
-				Name:      "resolve",
-				UsageText: "Resolves api-files for service",
+				Name:      "sync",
+				UsageText: "sync -o <output>",
+				Usage:     "Syncs api-files for service",
 				Action:    executeResolve,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -37,8 +39,14 @@ func runApp(args []string) error {
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:    "file",
-						Aliases: []string{"f"},
+						Name:        "file",
+						Aliases:     []string{"f"},
+						Value:       "build.yaml",
+						DefaultText: "file",
+					},
+					&cli.BoolFlag{
+						Name:    "quiet",
+						Aliases: []string{"q"},
 					},
 				},
 			},
@@ -48,12 +56,15 @@ func runApp(args []string) error {
 	return app.Run(args)
 }
 
-func initReporter() infrastructure.Reporter {
+func initReporter(ctx *cli.Context) reporter.Reporter {
 	impl := logrus.New()
 	impl.SetFormatter(&logrus.TextFormatter{
 		TimestampFormat:  time.RFC3339Nano,
 		DisableTimestamp: true,
 	})
 
-	return impl
+	return reporter.New(
+		ctx.Bool("quiet"),
+		impl,
+	)
 }
