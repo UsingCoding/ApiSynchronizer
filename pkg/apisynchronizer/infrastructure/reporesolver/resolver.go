@@ -2,6 +2,7 @@ package reporesolver
 
 import (
 	embedder "apisynchronizer/data/apisynchronizer"
+	"apisynchronizer/pkg/apisynchronizer/infrastructure"
 	"apisynchronizer/pkg/common/infrastructure/git"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -22,11 +23,17 @@ type Resolver interface {
 	Path() (string, error)
 }
 
-func New(apisRepoUrl, apisRepoCachePath string, gitExecutor git.Executor) Resolver {
+func New(
+	apisRepoUrl,
+	apisRepoCachePath string,
+	gitExecutor git.Executor,
+	reporter infrastructure.Reporter,
+) Resolver {
 	return &repoResolver{
 		apisRepoUrl:       apisRepoUrl,
 		apisRepoCachePath: apisRepoCachePath,
 		gitExecutor:       gitExecutor,
+		reporter:          reporter,
 	}
 }
 
@@ -34,6 +41,7 @@ type repoResolver struct {
 	apisRepoUrl       string
 	apisRepoCachePath string
 	gitExecutor       git.Executor
+	reporter          infrastructure.Reporter
 	repoResolved      bool
 }
 
@@ -54,6 +62,7 @@ func (resolver *repoResolver) resolveRepo() error {
 		return err
 	}
 	if err != nil {
+		resolver.reporter.Info("No local repo, cloning repo ⏳...")
 		err2 := os.MkdirAll(resolver.apisRepoCachePath, 0755)
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to create repo cache folder")
@@ -67,6 +76,8 @@ func (resolver *repoResolver) resolveRepo() error {
 		if err2 != nil {
 			return err2
 		}
+
+		resolver.reporter.Info("Remote repo cloned 🔥")
 	}
 
 	return nil

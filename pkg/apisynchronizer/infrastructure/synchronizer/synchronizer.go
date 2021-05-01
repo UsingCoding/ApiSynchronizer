@@ -51,7 +51,12 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 		return err
 	}
 
-	serviceApiFile := map[Service]string{}
+	s.reporter.Info("Fetching repo ⏳...")
+
+	serviceApiFile := map[Service]struct {
+		fileName string
+		file     []byte
+	}{}
 
 	for service, revision := range params.ApiDeclaration {
 		err2 := s.repoManager.Checkout(fmt.Sprintf("%s/%s", remoteBranch, revision))
@@ -64,29 +69,38 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 			return errors.Wrap(err2, fmt.Sprintf("service api file for %s doesnt exists in api repo", service))
 		}
 
-		serviceApiFile[service] = apiFileInApiRepo
+		input, err := ioutil.ReadFile(apiFileInApiRepo)
+		if err != nil {
+			return err
+		}
+
+		serviceApiFile[service] = struct {
+			fileName string
+			file     []byte
+		}{fileName: path.Base(apiFileInApiRepo), file: input}
 
 		s.reporter.Info(fmt.Sprintf("Api file for %s resolved", service))
 	}
 
 	s.reporter.Info("All api files resolved 👹")
 
-	for service, apiFilePath := range serviceApiFile {
+	for service, fileInfo := range serviceApiFile {
 		outputPath, err2 := s.structureBuilder.Build(service)
 		if err2 != nil {
 			return err2
 		}
 
-		fileName := path.Base(apiFilePath)
+		newApiFilePath := path.Join(outputPath, fileInfo.fileName)
 
-		newApiFilePath := path.Join(outputPath, fileName)
-		err2 = copyFile(newApiFilePath, apiFilePath)
+		err2 = ioutil.WriteFile(newApiFilePath, fileInfo.file, 0755)
 		if err2 != nil {
 			return err2
 		}
 
 		s.reporter.Info(fmt.Sprintf("Api file for %s synced to %s", service, newApiFilePath))
 	}
+
+	s.reporter.Info("All api files synchronized ✅")
 
 	return nil
 }
@@ -106,15 +120,5 @@ func (s *Synchronizer) fetchRemoteBranch() (string, error) {
 
 func fileExists(path string) error {
 	_, err := os.Stat(path)
-	return err
-}
-
-func copyFile(dst, source string) error {
-	input, err := ioutil.ReadFile(source)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(dst, input, 0644)
 	return err
 }
