@@ -33,7 +33,7 @@ func (finder *apiFileFinder) FindApiForService(service Service) (string, error) 
 	}
 
 	for _, entry := range entries {
-		fileNameWithoutExt := strings.Trim(entry.Name(), path.Ext(entry.Name()))
+		fileNameWithoutExt := strings.Replace(entry.Name(), path.Ext(entry.Name()), "", 1)
 		if fileNameWithoutExt == string(service) {
 			return path.Join(apisFolderPath, entry.Name()), nil
 		}
