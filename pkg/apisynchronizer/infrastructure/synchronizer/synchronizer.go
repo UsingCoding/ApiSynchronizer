@@ -56,13 +56,13 @@ func (s *Synchronizer) Synchronize(params SynchronizeParams) error {
 	if params.ForceRemote || len(changedFiles) == 0 {
 		useRemote = true
 		s.reporter.Info("Fetching repo ⏳...")
+
+		err = s.repoManager.FetchAll()
+		if err != nil {
+			return err
+		}
 	} else {
 		s.reporter.Info("Using local changes...")
-	}
-
-	err = s.repoManager.FetchAll()
-	if err != nil {
-		return err
 	}
 
 	serviceApiFile := map[Service]struct {

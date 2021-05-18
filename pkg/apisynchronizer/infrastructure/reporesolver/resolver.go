@@ -1,18 +1,15 @@
 package reporesolver
 
 import (
-	embedder "apisynchronizer/data/apisynchronizer"
 	"apisynchronizer/pkg/common/infrastructure/git"
 	"apisynchronizer/pkg/common/infrastructure/reporter"
 	"github.com/pkg/errors"
-	"io/ioutil"
 	"os"
 	"path"
 )
 
 const (
-	gitFolder     = ".git"
-	cacheRepoName = "@apis"
+	gitFolder = ".git"
 )
 
 var (
@@ -30,19 +27,19 @@ func New(
 	reporter reporter.Reporter,
 ) Resolver {
 	return &repoResolver{
-		apisRepoUrl:       apisRepoUrl,
-		apisRepoCachePath: apisRepoCachePath,
-		gitExecutor:       gitExecutor,
-		reporter:          reporter,
+		apisRepoUrl:  apisRepoUrl,
+		apisRepoPath: apisRepoCachePath,
+		gitExecutor:  gitExecutor,
+		reporter:     reporter,
 	}
 }
 
 type repoResolver struct {
-	apisRepoUrl       string
-	apisRepoCachePath string
-	gitExecutor       git.Executor
-	reporter          reporter.Reporter
-	repoResolved      bool
+	apisRepoUrl  string
+	apisRepoPath string
+	gitExecutor  git.Executor
+	reporter     reporter.Reporter
+	repoResolved bool
 }
 
 func (resolver *repoResolver) Path() (string, error) {
@@ -53,28 +50,24 @@ func (resolver *repoResolver) Path() (string, error) {
 		}
 	}
 
-	return path.Join(resolver.apisRepoCachePath, cacheRepoName), nil
+	return resolver.apisRepoPath, nil
 }
 
 func (resolver *repoResolver) resolveRepo() error {
-	err := repoInCacheExists(path.Join(resolver.apisRepoCachePath, cacheRepoName))
+	err := repoInCacheExists(resolver.apisRepoPath)
 	if err == errFolderExistsButItNotARepo {
 		return err
 	}
 	if err != nil {
 		resolver.reporter.Info("No local repo, cloning repo ⏳...")
-		err2 := os.MkdirAll(resolver.apisRepoCachePath, 0755)
+		err2 := os.MkdirAll(resolver.apisRepoPath, 0755)
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to create repo cache folder")
 		}
-		err2 = resolver.gitExecutor.RunWithWorkDir(resolver.apisRepoCachePath, "clone", resolver.apisRepoUrl, cacheRepoName)
+		repoFolder, repoName := path.Split(resolver.apisRepoPath)
+		err2 = resolver.gitExecutor.RunWithWorkDir(repoFolder, "clone", resolver.apisRepoUrl, repoName)
 		if err2 != nil {
 			return errors.Wrap(err2, "failed to clone repo")
-		}
-
-		err2 = ioutil.WriteFile(path.Join(resolver.apisRepoCachePath, cacheRepoName, embedder.WarningReadMeName), embedder.WarningReadMe, 0755)
-		if err2 != nil {
-			return err2
 		}
 
 		resolver.reporter.Info("Remote repo cloned 🔥")

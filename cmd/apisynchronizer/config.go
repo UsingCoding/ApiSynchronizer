@@ -13,7 +13,7 @@ var (
 func parseConfig() (*config, error) {
 	c := &config{
 		ApisRepoUrl:   apiRepoUrl,
-		RepoCachePath: "/tmp/apisynchronizer/cache",
+		LocalRepoPath: "/tmp/apisynchronizer/apistore",
 		ApisFolder:    "api",
 	}
 	if err := envconfig.Process(appID, c); err != nil {
@@ -34,7 +34,7 @@ func parseRuntimeConfig(ctx *cli.Context) (*runtimeConfig, error) {
 
 type config struct {
 	ApisRepoUrl   string `envconfig:"apis_repo_url"`
-	RepoCachePath string `envconfig:"repo_cache_path"`
+	LocalRepoPath string `envconfig:"local_repo_path"`
 	ApisFolder    string `envconfig:"apis_folder"`
 }
 

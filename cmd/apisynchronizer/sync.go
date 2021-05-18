@@ -36,7 +36,7 @@ func executeResolve(ctx *cli.Context) error {
 
 	repoResolver := reporesolver.New(
 		config.ApisRepoUrl,
-		config.RepoCachePath,
+		config.LocalRepoPath,
 		gitExecutor,
 		infoReporter,
 	)
